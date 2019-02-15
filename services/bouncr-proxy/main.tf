@@ -52,6 +52,10 @@ resource "aws_ecs_task_definition" "bouncr_proxy" {
       {
         "name": "REDIS_PORT",
         "value": "${var.redis_port}"
+      },
+      {
+        "name": "API_BACKEND_URL",
+        "value": "http://bouncr-api.dev.bouncr:3005/bouncr/api"
       }
     ]
   }

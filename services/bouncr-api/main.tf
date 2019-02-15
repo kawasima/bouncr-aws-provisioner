@@ -11,13 +11,15 @@ resource "aws_ecs_task_definition" "bouncr_api" {
   memory                   = 512
   execution_role_arn       = "${var.role_ecsTaskExecutionRole_arn}"
 
-  #  task_role_arn = "${aws_iam_role.app_role.arn}"
-
+  tags = {
+    Environment = "${var.environment}"
+  }
   container_definitions = <<EOF
 [
   {
     "name": "bouncr-api",
     "image": "${var.ecr_repository}",
+    "essential": true,
     "portMappings": [
       {
         "containerPort": 3005,

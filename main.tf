@@ -112,6 +112,13 @@ resource "aws_vpc_endpoint" "ecs" {
   private_dns_enabled = true
 }
 
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = "${aws_vpc.main.id}"
+  vpc_endpoint_type = "Gateway"
+  service_name = "com.amazonaws.ap-northeast-1.s3"
+  route_table_ids = ["${aws_vpc.main.default_route_table_id}"]
+}
+
 resource "aws_vpc_endpoint" "logs" {
   vpc_id       = "${aws_vpc.main.id}"
   vpc_endpoint_type = "Interface"
@@ -206,8 +213,8 @@ resource "aws_service_discovery_private_dns_namespace" "bouncr_internal" {
   vpc      = "${aws_vpc.main.id}"
 }
 
-resource "aws_service_discovery_service" "bouncr_internal" {
-  name = "bouncr-internal"
+resource "aws_service_discovery_service" "bouncr_api" {
+  name = "bouncr-api"
 
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.bouncr_internal.id}"
@@ -218,6 +225,10 @@ resource "aws_service_discovery_service" "bouncr_internal" {
     }
 
     routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
   }
 }
 
@@ -301,7 +312,7 @@ module "bouncr-api" {
   subnets          = ["${aws_subnet.back_1.id}", "${aws_subnet.back_2.id}", "${aws_subnet.back_3.id}"]
   ecr_repository   = "${var.bouncr_api_repository}"
   role_ecsTaskExecutionRole_arn = "${aws_iam_role.ecsTaskExecutionRole.arn}"
-  registry_arn     = "${aws_service_discovery_service.bouncr_internal.arn}"
+  registry_arn     = "${aws_service_discovery_service.bouncr_api.arn}"
 
   jdbc_url      = "jdbc:postgresql://${module.database.address}/${module.database.name}"
   jdbc_user     = "${module.database.username}"
